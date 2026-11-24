@@ -357,6 +357,9 @@ jobs:
           sed -i "s/org.gradle.jvmargs=-Xmx1024M/org.gradle.jvmargs=-Xmx2g/g" ./flutter/android/gradle.properties
           # temporary use debug sign config
           sed -i "s/signingConfigs.release/signingConfigs.debug/g" ./flutter/android/app/build.gradle
+          # Redirect Maven Central to Google mirror to avoid HTTP 429 on shared GitHub runners
+          mkdir -p ~/.gradle/init.d && echo "org.gradle.workers.max=2" >> ~/.gradle/gradle.properties
+          printf '%s\n' 'allprojects { [buildscript.repositories, repositories].each { r -> r.all { if (it instanceof MavenArtifactRepository && (it.url.toString().contains("repo.maven.apache.org") || it.url.toString().contains("repo1.maven.org"))) { it.setUrl(new URI("https://maven-central.storage-download.googleapis.com/maven2/")) } } } }' > ~/.gradle/init.d/maven-mirror.gradle
           case ${{ matrix.job.target }} in
             aarch64-linux-android)
               mkdir -p ./flutter/android/app/src/main/jniLibs/arm64-v8a
